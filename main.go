@@ -13,7 +13,7 @@ import (
 // SystemStatus 系统状态
 type SystemStatus struct {
 	Host    HostInfo
-	Network NetworkUsage
+	Network NetworkSpeed
 }
 
 // HostInfo 系统信息 Struct
@@ -24,8 +24,8 @@ type HostInfo struct {
 	Uptime   uint64
 }
 
-// NetworkUsage struct
-type NetworkUsage struct {
+// NetworkSpeed struct
+type NetworkSpeed struct {
 	Download float64
 	Upload   float64
 }
@@ -46,18 +46,18 @@ func GetNetworkInterface() string {
 	return networkInterface
 }
 
-// NetworkUsageMonitor 监控网络流量
-func NetworkUsageMonitor() NetworkUsage {
+// GetNetworkSpeed 监控网络流量
+func GetNetworkSpeed() NetworkSpeed {
 	networkInterface := GetNetworkInterface()
 	agoIOCounters, _ := net.IOCounters(true)
 	time.Sleep(time.Second)
 	nowIOCounters, _ := net.IOCounters(true)
 
-	networkUsage := NetworkUsage{}
+	networkSpeed := NetworkSpeed{}
 	for idx, usage := range nowIOCounters {
 		if usage.Name == networkInterface {
 			agoUsage := agoIOCounters[idx]
-			networkUsage = NetworkUsage{
+			networkSpeed = NetworkSpeed{
 				Upload:   (float64(usage.BytesRecv) - float64(agoUsage.BytesRecv)) / 1024,
 				Download: (float64(usage.BytesSent) - float64(agoUsage.BytesSent)) / 1024,
 			}
@@ -65,7 +65,7 @@ func NetworkUsageMonitor() NetworkUsage {
 		}
 	}
 
-	return networkUsage
+	return networkSpeed
 }
 
 // GetHostInfo 获取系统信息
@@ -91,7 +91,7 @@ func main() {
 	for {
 		// addr := os.Args[1]
 		system := SystemStatus{
-			Network: NetworkUsageMonitor(),
+			Network: GetNetworkSpeed(),
 			Host:    GetHostInfo(),
 		}
 
