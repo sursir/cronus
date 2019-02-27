@@ -25,7 +25,7 @@ func GetNetworkInterface() string {
 		networkInterface = "eth0"
 	default:
 		fmt.Println("Unsupport system yet.")
-		os.Exit(3)
+		os.Exit(1)
 	}
 
 	return networkInterface
