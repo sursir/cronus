@@ -6,8 +6,23 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/net"
 )
+
+// SystemStatus 系统状态
+type SystemStatus struct {
+	Host    HostInfo
+	Network NetworkUsage
+}
+
+// HostInfo 系统信息 Struct
+type HostInfo struct {
+	OS       string
+	Hostname string
+	Version  string
+	Uptime   uint64
+}
 
 // NetworkUsage struct
 type NetworkUsage struct {
@@ -21,7 +36,7 @@ func GetNetworkInterface() string {
 	switch runtime.GOOS {
 	case "darwin":
 		networkInterface = "en0"
-	case "linux", "FreeBSD":
+	case "linux", "freebsd":
 		networkInterface = "eth0"
 	default:
 		fmt.Println("Unsupport system yet.")
@@ -53,6 +68,20 @@ func NetworkUsageMonitor() NetworkUsage {
 	return networkUsage
 }
 
+// GetHostInfo 获取系统信息
+func GetHostInfo() HostInfo {
+	info, _ := host.Info()
+
+	hostInfo := HostInfo{
+		OS:       info.OS,
+		Hostname: info.Hostname,
+		Uptime:   info.Uptime,
+		Version:  info.PlatformVersion,
+	}
+
+	return hostInfo
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("The cronus agent could not be started due to 1 parameter was expected but no parameter was given.")
@@ -61,8 +90,11 @@ func main() {
 
 	for {
 		// addr := os.Args[1]
-		networkUsage := NetworkUsageMonitor()
+		system := SystemStatus{
+			Network: NetworkUsageMonitor(),
+			Host:    GetHostInfo(),
+		}
 
-		fmt.Println(networkUsage)
+		fmt.Println(system)
 	}
 }
