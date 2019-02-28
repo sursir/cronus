@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/shirou/gopsutil/host"
@@ -25,7 +25,7 @@ type SystemStatus struct {
 // HostInfo 系统信息 Struct
 type HostInfo struct {
 	OS       string `json:"os"`
-	HostID   string `json"host_id"`
+	HostID   string `json:"host_id"`
 	Hostname string `json:"hostname"`
 	Version  string `json:"version"`
 	Uptime   uint64 `json:"uptime"`
@@ -90,10 +90,10 @@ func GetHostInfo() HostInfo {
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("The cronus agent could not be started due to 1 parameter was expected but no parameter was given.")
-		return
-	}
+
+	addr := flag.String("addr", "http://127.0.0.1:8080", "上报服务器地址")
+	token := flag.String("token", "", "验证 Token")
+	flag.Parse()
 
 	for {
 		system := &SystemStatus{
@@ -101,10 +101,10 @@ func main() {
 			Host:    GetHostInfo(),
 		}
 
-		addr := strings.TrimLeft(os.Args[1], "-addr=")
 		json, _ := json.Marshal(system)
-		req, err := http.NewRequest("POST", addr, bytes.NewBuffer(json))
+		req, err := http.NewRequest("POST", *addr, bytes.NewBuffer(json))
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+*token)
 
 		client := &http.Client{}
 		client.Timeout = time.Second * 15
