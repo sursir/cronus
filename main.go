@@ -1,9 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/shirou/gopsutil/host"
@@ -18,16 +24,17 @@ type SystemStatus struct {
 
 // HostInfo 系统信息 Struct
 type HostInfo struct {
-	OS       string
-	Hostname string
-	Version  string
-	Uptime   uint64
+	OS       string `json:"os"`
+	HostID   string `json"host_id"`
+	Hostname string `json:"hostname"`
+	Version  string `json:"version"`
+	Uptime   uint64 `json:"uptime"`
 }
 
 // NetworkSpeed struct
 type NetworkSpeed struct {
-	Download float64
-	Upload   float64
+	Download float64 `json:"download"`
+	Upload   float64 `json:"upload"`
 }
 
 // GetNetworkInterface 获取网卡名字
@@ -71,9 +78,9 @@ func GetNetworkSpeed() NetworkSpeed {
 // GetHostInfo 获取系统信息
 func GetHostInfo() HostInfo {
 	info, _ := host.Info()
-
 	hostInfo := HostInfo{
 		OS:       info.OS,
+		HostID:   info.HostID,
 		Hostname: info.Hostname,
 		Uptime:   info.Uptime,
 		Version:  info.PlatformVersion,
@@ -89,12 +96,27 @@ func main() {
 	}
 
 	for {
-		// addr := os.Args[1]
-		system := SystemStatus{
+		system := &SystemStatus{
 			Network: GetNetworkSpeed(),
 			Host:    GetHostInfo(),
 		}
 
-		fmt.Println(system)
+		addr := strings.TrimLeft(os.Args[1], "-addr=")
+		json, _ := json.Marshal(system)
+		req, err := http.NewRequest("POST", addr, bytes.NewBuffer(json))
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		client.Timeout = time.Second * 15
+		resp, err := client.Do(req)
+
+		if err != nil {
+			panic(err)
+		}
+
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+
+		log.Println(string(body))
 	}
 }
