@@ -174,7 +174,6 @@ func main() {
 	json.Unmarshal(b, &config)
 
 	// Connect DB
-
 	if err = ConnectDatabase(); err != nil {
 		log.Fatalf("Failed to connect database %v", err.Error())
 	}
