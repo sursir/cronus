@@ -1,0 +1,11 @@
+{
+    "listen_addr": "127.0.0.1:50051",
+    "token": "123456789",
+    "database": {
+        "driver": "mysql",
+        "host": "127.0.0.1",
+        "username": "root",
+        "password": "123456",
+        "database": "database"
+    }
+}

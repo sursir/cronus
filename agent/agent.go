@@ -33,8 +33,8 @@ type HostInfo struct {
 
 // NetworkSpeed struct
 type NetworkSpeed struct {
-	Download float64 `json:"download"`
-	Upload   float64 `json:"upload"`
+	Download uint64 `json:"download"`
+	Upload   uint64 `json:"upload"`
 }
 
 // GetNetworkInterface 获取网卡名字
@@ -65,8 +65,8 @@ func GetNetworkSpeed() NetworkSpeed {
 		if usage.Name == networkInterface {
 			agoUsage := agoIOCounters[idx]
 			networkSpeed = NetworkSpeed{
-				Upload:   (float64(usage.BytesRecv) - float64(agoUsage.BytesRecv)) / 1024,
-				Download: (float64(usage.BytesSent) - float64(agoUsage.BytesSent)) / 1024,
+				Upload:   (uint64(usage.BytesRecv) - uint64(agoUsage.BytesRecv)),
+				Download: (uint64(usage.BytesSent) - uint64(agoUsage.BytesSent)),
 			}
 			break
 		}
@@ -91,8 +91,8 @@ func GetHostInfo() HostInfo {
 
 func main() {
 
-	addr := flag.String("addr", "http://127.0.0.1:8080", "上报服务器地址")
-	token := flag.String("token", "", "验证 Token")
+	addr := flag.String("addr", "http://127.0.0.1:8080", "Report Address")
+	token := flag.String("token", "", "Authorization Token")
 	flag.Parse()
 
 	for {
@@ -111,7 +111,7 @@ func main() {
 		resp, err := client.Do(req)
 
 		if err != nil {
-			panic(err)
+			log.Fatalf(err.Error())
 		}
 
 		defer resp.Body.Close()
